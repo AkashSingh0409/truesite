@@ -21,16 +21,24 @@ pipeline {
         }
 
         stage('Run Tests') {
-    steps {
-        sh 'echo "Skipping tests as none are defined"'
-        // sh 'npm test'  # Comment this out
-    }
-}
-
+            steps {
+                sh 'npm install --save-dev jest'
+                sh 'npm test'
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t $IMAGE_NAME ."
+                script {
+                    try {
+                        sh """
+                            docker build -t $IMAGE_NAME .
+                            docker images | grep $IMAGE_NAME
+                        """
+                    } catch (Exception e) {
+                        error "Failed to build Docker image: ${e.message}"
+                    }
+                }
             }
         }
 
