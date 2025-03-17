@@ -29,31 +29,28 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("$IMAGE_NAME")
-                }
+                sh """
+                    docker build -t $IMAGE_NAME .
+                    docker tag $IMAGE_NAME $DOCKER_HUB_USER/$IMAGE_NAME:latest
+                """
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                script {
-                    docker.withRegistry('', 'docker-hub-credentials') {
-                        docker.image("$IMAGE_NAME").push('latest')
-                    }
+                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
+                    sh "docker push $DOCKER_HUB_USER/$IMAGE_NAME:latest"
                 }
             }
         }
 
         stage('Deploy Container') {
             steps {
-                script {
-                    sh """
-                        docker stop $CONTAINER_NAME || true
-                        docker rm $CONTAINER_NAME || true
-                        docker run -d -p 3000:3000 --name $CONTAINER_NAME $DOCKER_HUB_USER/$IMAGE_NAME:latest
-                    """
-                }
+                sh """
+                    docker stop $CONTAINER_NAME || true
+                    docker rm $CONTAINER_NAME || true
+                    docker run -d -p 3000:3000 --name $CONTAINER_NAME $DOCKER_HUB_USER/$IMAGE_NAME:latest
+                """
             }
         }
     }
