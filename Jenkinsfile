@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "truesite"
         CONTAINER_NAME = "truesite_container"
-        DOCKER_HUB_USER = "your_dockerhub_username"
+        DOCKER_HUB_USER = "akaash19"
     }
 
     stages {
