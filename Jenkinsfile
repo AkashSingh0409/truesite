@@ -16,7 +16,7 @@ pipeline {
         stage('Run Docker Container') {
             steps {
                 script {
-                    bat 'docker run -d -p 8080:80 truesite'
+                    bat 'docker run -d -p 9090:80 truesite'
                 }
             }
         }
