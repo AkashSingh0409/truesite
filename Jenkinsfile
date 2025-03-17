@@ -27,24 +27,39 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Setup Docker') {
+            steps {
+                sh '''
+                    apt-get update
+                    apt-get install -y docker.io
+                    service docker start
+                '''
+            }
+        }
+
+        stage('Build and Push') {
+            agent {
+                docker {
+                    image 'docker:latest'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             steps {
                 sh """
                     docker build -t $IMAGE_NAME .
                     docker tag $IMAGE_NAME $DOCKER_HUB_USER/$IMAGE_NAME:latest
+                    docker push $DOCKER_HUB_USER/$IMAGE_NAME:latest
                 """
             }
         }
 
-        stage('Push to Docker Hub') {
-            steps {
-                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
-                    sh "docker push $DOCKER_HUB_USER/$IMAGE_NAME:latest"
+        stage('Deploy') {
+            agent {
+                docker {
+                    image 'docker:latest'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
-        }
-
-        stage('Deploy Container') {
             steps {
                 sh """
                     docker stop $CONTAINER_NAME || true
