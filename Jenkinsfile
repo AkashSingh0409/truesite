@@ -9,14 +9,14 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t truesite .'
+                    bat 'docker build -t truesite .'
                 }
             }
         }
         stage('Run Docker Container') {
             steps {
                 script {
-                    sh 'docker run -d -p 8080:80 truesite'
+                    bat 'docker run -d -p 8080:80 truesite'
                 }
             }
         }
