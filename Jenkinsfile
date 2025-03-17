@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/AkashSingh0409/truesite'
+                git branch: 'main', url: 'https://github.com/AkashSingh0409/truesite.git'
             }
         }
         stage('Build Docker Image') {
