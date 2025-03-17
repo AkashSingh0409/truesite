@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TrueSite - Website Info Portal</title>
+    <title>TrueSite</title>
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -11,7 +11,6 @@
             padding: 0;
             background-color: #f4f7f9;
             color: #333;
-            line-height: 1.6;
         }
         header {
             background: linear-gradient(135deg, #4a6fa5, #166088);
@@ -20,15 +19,11 @@
             padding: 1rem 0;
         }
         .container {
-            max-width: 900px;
+            max-width: 800px;
             margin: 1rem auto;
             padding: 0 1rem;
         }
-        .search-container {
-            background-color: white;
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .search-box {
             display: flex;
             margin-bottom: 1rem;
         }
@@ -37,7 +32,6 @@
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 16px;
         }
         button {
             background-color: #4a6fa5;
@@ -48,12 +42,12 @@
             margin-left: 8px;
             cursor: pointer;
         }
-        .result-container {
+        .card {
             background-color: white;
             border-radius: 8px;
             padding: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
         }
         .site-header {
             display: flex;
@@ -72,22 +66,6 @@
             font-size: 24px;
             margin-right: 10px;
         }
-        .loader {
-            text-align: center;
-            margin: 1rem 0;
-            display: none;
-        }
-        .card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 0.8rem;
-            margin-bottom: 1rem;
-        }
-        .card h3 {
-            margin-top: 0;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-        }
         .badge {
             display: inline-block;
             padding: 3px 8px;
@@ -99,12 +77,7 @@
         .badge-safe { background-color: #28a745; }
         .badge-warning { background-color: #ffc107; color: #333; }
         .badge-danger { background-color: #dc3545; }
-        .error-message {
-            color: #dc3545;
-            text-align: center;
-            margin: 1rem 0;
-            display: none;
-        }
+        #result, #error, #loader { display: none; }
     </style>
 </head>
 <body>
@@ -114,198 +87,183 @@
     </header>
     
     <div class="container">
-        <div class="search-container">
-            <input type="text" id="site-input" placeholder="Enter website URL (e.g., google.com)" />
-            <button id="search-button">Search</button>
+        <div class="card">
+            <div class="search-box">
+                <input type="text" id="site-input" placeholder="Enter website URL (e.g., google.com)" />
+                <button id="search-btn">Search</button>
+            </div>
+            <div id="loader">Loading website information...</div>
+            <div id="error"></div>
         </div>
         
-        <div class="loader" id="loader">Loading website information...</div>
-        <div class="error-message" id="error-message"></div>
-        
-        <div class="result-container" id="result-container">
+        <div id="result" class="card">
             <div class="site-header">
-                <div class="site-icon" id="site-icon">?</div>
+                <div class="site-icon" id="site-icon">G</div>
                 <div>
                     <h2 id="site-name">Website</h2>
                     <div id="site-url">website.com</div>
+                    <div id="safety-badges"></div>
                 </div>
             </div>
-            
-            <div class="card">
-                <h3>Safety Rating</h3>
-                <div id="safety-badges"></div>
-                <p id="safety-description"></p>
-            </div>
-            
-            <div class="card">
-                <h3>Technical Details</h3>
-                <p>Server: <span id="server-info">-</span></p>
-                <p>IP: <span id="ip-address">-</span></p>
-                <p>Technologies: <span id="tech-stack">-</span></p>
-            </div>
-            
-            <div class="card">
-                <h3>Location & Performance</h3>
-                <p>Country: <span id="country">-</span></p>
-                <p>Hosting: <span id="hosting">-</span></p>
-                <p>Loading Time: <span id="loading-time">-</span></p>
+            <div id="site-info"></div>
+            <div>
+                <h3>Technical Info</h3>
+                <p id="tech-info"></p>
             </div>
         </div>
     </div>
     
     <script>
-        // Main elements
+        // Website database (simplified)
+        const websites = {
+            "google.com": {
+                name: "Google",
+                description: "Google is a multinational technology company specializing in Internet-related services and products, including search engine, online advertising, cloud computing, software, and hardware.",
+                founded: "September 4, 1998",
+                founders: "Larry Page and Sergey Brin",
+                headquarters: "Mountain View, California, United States",
+                safety: "safe"
+            },
+            "facebook.com": {
+                name: "Facebook",
+                description: "Facebook is a social media and social networking service owned by Meta Platforms, connecting billions of users worldwide.",
+                founded: "February 4, 2004",
+                founders: "Mark Zuckerberg, Eduardo Saverin, Andrew McCollum, Dustin Moskovitz, and Chris Hughes",
+                headquarters: "Menlo Park, California, United States",
+                safety: "safe"
+            },
+            "twitter.com": {
+                name: "Twitter",
+                description: "Twitter (X) is a social networking service where users post and interact with messages known as tweets.",
+                founded: "March 21, 2006",
+                founders: "Jack Dorsey, Noah Glass, Biz Stone, and Evan Williams",
+                headquarters: "San Francisco, California, United States",
+                safety: "safe"
+            },
+            "amazon.com": {
+                name: "Amazon",
+                description: "Amazon is a multinational technology company focusing on e-commerce, cloud computing, digital streaming, and artificial intelligence.",
+                founded: "July 5, 1994",
+                founders: "Jeff Bezos",
+                headquarters: "Seattle, Washington, United States",
+                safety: "safe"
+            },
+            "microsoft.com": {
+                name: "Microsoft",
+                description: "Microsoft Corporation is a technology company that develops, manufactures, licenses, supports, and sells computer software, consumer electronics, and personal computers.",
+                founded: "April 4, 1975",
+                founders: "Bill Gates and Paul Allen",
+                headquarters: "Redmond, Washington, United States",
+                safety: "safe"
+            }
+        };
+
+        // Elements
         const siteInput = document.getElementById('site-input');
-        const searchButton = document.getElementById('search-button');
+        const searchBtn = document.getElementById('search-btn');
         const loader = document.getElementById('loader');
-        const resultContainer = document.getElementById('result-container');
-        const errorMessage = document.getElementById('error-message');
-        
-        // Result elements
+        const result = document.getElementById('result');
+        const error = document.getElementById('error');
         const siteName = document.getElementById('site-name');
         const siteUrl = document.getElementById('site-url');
         const siteIcon = document.getElementById('site-icon');
+        const siteInfo = document.getElementById('site-info');
+        const techInfo = document.getElementById('tech-info');
         const safetyBadges = document.getElementById('safety-badges');
-        const safetyDescription = document.getElementById('safety-description');
-        const serverInfo = document.getElementById('server-info');
-        const ipAddress = document.getElementById('ip-address');
-        const techStack = document.getElementById('tech-stack');
-        const country = document.getElementById('country');
-        const hosting = document.getElementById('hosting');
-        const loadingTime = document.getElementById('loading-time');
         
-        // Initialize
-        searchButton.addEventListener('click', performSearch);
-        siteInput.addEventListener('keypress', e => { 
-            if (e.key === 'Enter') performSearch(); 
-        });
+        // Event listeners
+        searchBtn.addEventListener('click', search);
+        siteInput.addEventListener('keypress', e => { if (e.key === 'Enter') search(); });
         
-        // Main search function
-        function performSearch() {
-            const url = formatUrl(siteInput.value.trim());
-            
-            if (!url) {
+        function search() {
+            const domain = extractDomain(siteInput.value.trim());
+            if (!domain) {
                 showError('Please enter a valid website URL');
                 return;
             }
             
-            // Show loader, hide results
+            // Show loader
+            error.style.display = 'none';
+            result.style.display = 'none';
             loader.style.display = 'block';
-            resultContainer.style.display = 'none';
-            errorMessage.style.display = 'none';
             
-            // Fetch website info
+            // Simulate API call
             setTimeout(() => {
-                const domain = extractDomain(url);
-                const data = generateMockData(domain);
-                displayResults(data);
-                loader.style.display = 'none';
-                resultContainer.style.display = 'block';
-            }, 1000);
+                displayWebsiteInfo(domain);
+            }, 800);
         }
         
-        // Format URL properly
-        function formatUrl(input) {
+        function extractDomain(input) {
             if (!input) return '';
-            if (!input.startsWith('http://') && !input.startsWith('https://')) {
-                input = 'https://' + input;
-            }
-            try {
-                return new URL(input).toString();
-            } catch (e) {
-                return '';
-            }
+            
+            // Remove http:// or https:// if present
+            input = input.replace(/^https?:\/\//, '');
+            
+            // Remove paths, queries, etc.
+            input = input.split('/')[0];
+            
+            return input.toLowerCase();
         }
         
-        // Extract domain from URL
-        function extractDomain(url) {
-            try {
-                return new URL(url).hostname;
-            } catch (e) {
-                return url;
-            }
-        }
-        
-        // Show error message
         function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
+            error.textContent = message;
+            error.style.display = 'block';
             loader.style.display = 'none';
-            resultContainer.style.display = 'none';
+            result.style.display = 'none';
         }
         
-        // Generate mock data
-        function generateMockData(domain) {
-            const hash = Array.from(domain).reduce((a, c) => (a * 31 + c.charCodeAt(0)) & 0xffffffff, 0);
-            const popular = ['google', 'microsoft', 'amazon', 'apple', 'facebook', 'twitter'];
-            const isPop = popular.some(item => domain.includes(item));
+        function displayWebsiteInfo(domain) {
+            // Get website data
+            const data = websites[domain] || generateInfo(domain);
             
-            // Generate safety info
-            const safety = isPop ? 'safe' : ['safe', 'warning', 'danger'][Math.abs(hash) % 3];
-            const badges = [];
-            
-            if (safety === 'safe') {
-                badges.push({ type: 'safe', text: 'Safe' });
-            } else if (safety === 'warning') {
-                badges.push({ type: 'warning', text: 'Caution' });
-            } else {
-                badges.push({ type: 'danger', text: 'Potentially Unsafe' });
-            }
-            
-            // Tech info
-            const servers = ['Apache', 'Nginx', 'Microsoft-IIS', 'Cloudflare', 'AWS'];
-            const techs = ['PHP', 'Node.js', 'WordPress', 'React', 'Angular', 'jQuery'];
-            const countries = ['United States', 'Germany', 'UK', 'France', 'Netherlands', 'Japan', 'Canada'];
-            const hosts = ['AWS', 'Google Cloud', 'Microsoft Azure', 'DigitalOcean', 'Cloudflare'];
-            
-            return {
-                domain: domain,
-                name: domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1),
-                safety: {
-                    level: safety,
-                    badges: badges,
-                    description: `${domain} appears to be ${safety === 'safe' ? 'safe' : safety === 'warning' ? 'potentially risky' : 'unsafe'}.`
-                },
-                technical: {
-                    server: servers[Math.abs(hash) % servers.length],
-                    ip: `${hash % 256}.${(hash >> 8) % 256}.${(hash >> 16) % 256}.${(hash >> 24) % 256}`,
-                    technologies: [techs[Math.abs(hash) % techs.length], techs[(Math.abs(hash) + 1) % techs.length]]
-                },
-                location: {
-                    country: countries[Math.abs(hash) % countries.length],
-                    hosting: hosts[Math.abs(hash) % hosts.length]
-                },
-                performance: {
-                    loadTime: `${(Math.abs(hash) % 900 + 100) / 1000}s`
-                }
-            };
-        }
-        
-        // Display results
-        function displayResults(data) {
+            // Update UI
             siteName.textContent = data.name;
-            siteUrl.textContent = data.domain;
+            siteUrl.textContent = domain;
             siteIcon.textContent = data.name.charAt(0);
             
-            // Safety info
+            // Generate site info
+            let infoHTML = `<p>${data.description}</p>`;
+            if (data.founded) {
+                infoHTML += `<p><strong>Founded:</strong> ${data.founded}</p>`;
+            }
+            if (data.founders) {
+                infoHTML += `<p><strong>Founder(s):</strong> ${data.founders}</p>`;
+            }
+            if (data.headquarters) {
+                infoHTML += `<p><strong>Headquarters:</strong> ${data.headquarters}</p>`;
+            }
+            siteInfo.innerHTML = infoHTML;
+            
+            // Safety badges
             safetyBadges.innerHTML = '';
-            data.safety.badges.forEach(badge => {
-                const badgeEl = document.createElement('span');
-                badgeEl.className = `badge badge-${badge.type}`;
-                badgeEl.textContent = badge.text;
-                safetyBadges.appendChild(badgeEl);
-            });
-            safetyDescription.textContent = data.safety.description;
+            const badgeEl = document.createElement('span');
+            badgeEl.className = `badge badge-${data.safety}`;
+            badgeEl.textContent = data.safety === 'safe' ? 'Safe' : data.safety === 'warning' ? 'Caution' : 'Warning';
+            safetyBadges.appendChild(badgeEl);
             
-            // Technical details
-            serverInfo.textContent = data.technical.server;
-            ipAddress.textContent = data.technical.ip;
-            techStack.textContent = data.technical.technologies.join(', ');
+            // Technical info (generated)
+            const serverTypes = ['Apache', 'Nginx', 'Cloudflare', 'IIS'];
+            const technologies = ['PHP', 'JavaScript', 'React', 'Node.js', 'WordPress'];
+            const hash = domain.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
             
-            // Location & performance
-            country.textContent = data.location.country;
-            hosting.textContent = data.location.hosting;
-            loadingTime.textContent = data.performance.loadTime;
+            techInfo.innerHTML = 
+                `<p><strong>Server:</strong> ${serverTypes[hash % serverTypes.length]}</p>
+                <p><strong>IP:</strong> ${(hash % 256)}.${((hash/256) % 256).toFixed(0)}.${((hash/65536) % 256).toFixed(0)}.${((hash/16777216) % 256).toFixed(0)}</p>
+                <p><strong>Technologies:</strong> ${technologies[hash % technologies.length]}, ${technologies[(hash+1) % technologies.length]}</p>
+                <p><strong>Performance:</strong> ${(hash % 10) / 10 + 0.1}s load time</p>`;
+            
+            // Show result
+            loader.style.display = 'none';
+            result.style.display = 'block';
+        }
+        
+        function generateInfo(domain) {
+            // Generate basic info for unknown domains
+            return {
+                name: domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1),
+                description: `${domain} is a website. No detailed information is available in our database.`,
+                safety: Math.random() > 0.7 ? 'warning' : 'safe'
+            };
         }
     </script>
 </body>
