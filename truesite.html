@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrueSite - Website Info Portal</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f9;
+            color: #333;
+            line-height: 1.6;
+        }
+        header {
+            background: linear-gradient(135deg, #4a6fa5, #166088);
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 1rem auto;
+            padding: 0 1rem;
+        }
+        .search-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            margin-bottom: 1rem;
+        }
+        input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 15px;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        .result-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .site-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .site-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background-color: #4a6fa5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        .loader {
+            text-align: center;
+            margin: 1rem 0;
+            display: none;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        .card h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 5px;
+            color: white;
+        }
+        .badge-safe { background-color: #28a745; }
+        .badge-warning { background-color: #ffc107; color: #333; }
+        .badge-danger { background-color: #dc3545; }
+        .error-message {
+            color: #dc3545;
+            text-align: center;
+            margin: 1rem 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>TrueSite</h1>
+        <p>Get information about any website</p>
+    </header>
+    
+    <div class="container">
+        <div class="search-container">
+            <input type="text" id="site-input" placeholder="Enter website URL (e.g., google.com)" />
+            <button id="search-button">Search</button>
+        </div>
+        
+        <div class="loader" id="loader">Loading website information...</div>
+        <div class="error-message" id="error-message"></div>
+        
+        <div class="result-container" id="result-container">
+            <div class="site-header">
+                <div class="site-icon" id="site-icon">?</div>
+                <div>
+                    <h2 id="site-name">Website</h2>
+                    <div id="site-url">website.com</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>Safety Rating</h3>
+                <div id="safety-badges"></div>
+                <p id="safety-description"></p>
+            </div>
+            
+            <div class="card">
+                <h3>Technical Details</h3>
+                <p>Server: <span id="server-info">-</span></p>
+                <p>IP: <span id="ip-address">-</span></p>
+                <p>Technologies: <span id="tech-stack">-</span></p>
+            </div>
+            
+            <div class="card">
+                <h3>Location & Performance</h3>
+                <p>Country: <span id="country">-</span></p>
+                <p>Hosting: <span id="hosting">-</span></p>
+                <p>Loading Time: <span id="loading-time">-</span></p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Main elements
+        const siteInput = document.getElementById('site-input');
+        const searchButton = document.getElementById('search-button');
+        const loader = document.getElementById('loader');
+        const resultContainer = document.getElementById('result-container');
+        const errorMessage = document.getElementById('error-message');
+        
+        // Result elements
+        const siteName = document.getElementById('site-name');
+        const siteUrl = document.getElementById('site-url');
+        const siteIcon = document.getElementById('site-icon');
+        const safetyBadges = document.getElementById('safety-badges');
+        const safetyDescription = document.getElementById('safety-description');
+        const serverInfo = document.getElementById('server-info');
+        const ipAddress = document.getElementById('ip-address');
+        const techStack = document.getElementById('tech-stack');
+        const country = document.getElementById('country');
+        const hosting = document.getElementById('hosting');
+        const loadingTime = document.getElementById('loading-time');
+        
+        // Initialize
+        searchButton.addEventListener('click', performSearch);
+        siteInput.addEventListener('keypress', e => { 
+            if (e.key === 'Enter') performSearch(); 
+        });
+        
+        // Main search function
+        function performSearch() {
+            const url = formatUrl(siteInput.value.trim());
+            
+            if (!url) {
+                showError('Please enter a valid website URL');
+                return;
+            }
+            
+            // Show loader, hide results
+            loader.style.display = 'block';
+            resultContainer.style.display = 'none';
+            errorMessage.style.display = 'none';
+            
+            // Fetch website info
+            setTimeout(() => {
+                const domain = extractDomain(url);
+                const data = generateMockData(domain);
+                displayResults(data);
+                loader.style.display = 'none';
+                resultContainer.style.display = 'block';
+            }, 1000);
+        }
+        
+        // Format URL properly
+        function formatUrl(input) {
+            if (!input) return '';
+            if (!input.startsWith('http://') && !input.startsWith('https://')) {
+                input = 'https://' + input;
+            }
+            try {
+                return new URL(input).toString();
+            } catch (e) {
+                return '';
+            }
+        }
+        
+        // Extract domain from URL
+        function extractDomain(url) {
+            try {
+                return new URL(url).hostname;
+            } catch (e) {
+                return url;
+            }
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            loader.style.display = 'none';
+            resultContainer.style.display = 'none';
+        }
+        
+        // Generate mock data
+        function generateMockData(domain) {
+            const hash = Array.from(domain).reduce((a, c) => (a * 31 + c.charCodeAt(0)) & 0xffffffff, 0);
+            const popular = ['google', 'microsoft', 'amazon', 'apple', 'facebook', 'twitter'];
+            const isPop = popular.some(item => domain.includes(item));
+            
+            // Generate safety info
+            const safety = isPop ? 'safe' : ['safe', 'warning', 'danger'][Math.abs(hash) % 3];
+            const badges = [];
+            
+            if (safety === 'safe') {
+                badges.push({ type: 'safe', text: 'Safe' });
+            } else if (safety === 'warning') {
+                badges.push({ type: 'warning', text: 'Caution' });
+            } else {
+                badges.push({ type: 'danger', text: 'Potentially Unsafe' });
+            }
+            
+            // Tech info
+            const servers = ['Apache', 'Nginx', 'Microsoft-IIS', 'Cloudflare', 'AWS'];
+            const techs = ['PHP', 'Node.js', 'WordPress', 'React', 'Angular', 'jQuery'];
+            const countries = ['United States', 'Germany', 'UK', 'France', 'Netherlands', 'Japan', 'Canada'];
+            const hosts = ['AWS', 'Google Cloud', 'Microsoft Azure', 'DigitalOcean', 'Cloudflare'];
+            
+            return {
+                domain: domain,
+                name: domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1),
+                safety: {
+                    level: safety,
+                    badges: badges,
+                    description: `${domain} appears to be ${safety === 'safe' ? 'safe' : safety === 'warning' ? 'potentially risky' : 'unsafe'}.`
+                },
+                technical: {
+                    server: servers[Math.abs(hash) % servers.length],
+                    ip: `${hash % 256}.${(hash >> 8) % 256}.${(hash >> 16) % 256}.${(hash >> 24) % 256}`,
+                    technologies: [techs[Math.abs(hash) % techs.length], techs[(Math.abs(hash) + 1) % techs.length]]
+                },
+                location: {
+                    country: countries[Math.abs(hash) % countries.length],
+                    hosting: hosts[Math.abs(hash) % hosts.length]
+                },
+                performance: {
+                    loadTime: `${(Math.abs(hash) % 900 + 100) / 1000}s`
+                }
+            };
+        }
+        
+        // Display results
+        function displayResults(data) {
+            siteName.textContent = data.name;
+            siteUrl.textContent = data.domain;
+            siteIcon.textContent = data.name.charAt(0);
+            
+            // Safety info
+            safetyBadges.innerHTML = '';
+            data.safety.badges.forEach(badge => {
+                const badgeEl = document.createElement('span');
+                badgeEl.className = `badge badge-${badge.type}`;
+                badgeEl.textContent = badge.text;
+                safetyBadges.appendChild(badgeEl);
+            });
+            safetyDescription.textContent = data.safety.description;
+            
+            // Technical details
+            serverInfo.textContent = data.technical.server;
+            ipAddress.textContent = data.technical.ip;
+            techStack.textContent = data.technical.technologies.join(', ');
+            
+            // Location & performance
+            country.textContent = data.location.country;
+            hosting.textContent = data.location.hosting;
+            loadingTime.textContent = data.performance.loadTime;
+        }
+    </script>
+</body>
+</html>

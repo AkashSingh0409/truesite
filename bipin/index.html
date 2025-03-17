@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourist Place Management System</title>
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/api/placeholder/1200/600') center/cover no-repeat;
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .header-content h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-content p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+            margin-bottom: 2rem;
+        }
+
+        .search-bar {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            background: white;
+            border-radius: 50px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .search-bar button {
+            padding: 15px 30px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+
+        .search-bar button:hover {
+            background: #ff5252;
+        }
+
+        /* Navigation */
+        nav {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 15px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff6b6b;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo i {
+            margin-right: 10px;
+        }
+
+        .menu {
+            display: flex;
+            list-style: none;
+        }
+
+        .menu li {
+            padding: 0 15px;
+        }
+
+        .menu a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .menu a:hover, .menu a.active {
+            color: #ff6b6b;
+        }
+
+        .menu-toggle {
+            display: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        /* Featured Destinations */
+        .featured-section {
+            padding: 4rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-title p {
+            color: #777;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .destinations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 2rem;
+        }
+
+        .destination-card {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .destination-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .destination-img {
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .destination-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .destination-card:hover .destination-img img {
+            transform: scale(1.1);
+        }
+
+        .destination-info {
+            padding: 20px;
+        }
+
+        .destination-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .rating {
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .destination-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #777;
+            margin-bottom: 15px;
+        }
+
+        .destination-desc {
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #ff5252;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .btn-outline:hover {
+            background-color: #ff6b6b;
+            color: white;
+        }
+
+        /* Admin Panel Section */
+        .admin-panel {
+            padding: 4rem 0;
+            background-color: #f9f9f9;
+        }
+
+        .admin-controls {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        form .form-group {
+            margin-bottom: 15px;
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        form input, form textarea, form select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        form textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        thead {
+            background-color: #ff6b6b;
+            color: white;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .edit-btn, .delete-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .edit-btn {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #333;
+            color: white;
+            padding: 3rem 0;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -10px;
+            width: 30px;
+            height: 2px;
+            background-color: #ff6b6b;
+        }
+
+        .footer-column p {
+            margin-bottom: 1rem;
+            color: #aaa;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-column ul a {
+            color: #aaa;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-column ul a:hover {
+            color: #ff6b6b;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid #444;
+            color: #aaa;
+        }
+
+        /* Hide form initially */
+        #destinationForm {
+            display: none;
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .menu {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                width: 80%;
+                height: calc(100vh - 70px);
+                background-color: white;
+                flex-direction: column;
+                padding: 20px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                transition: left 0.3s;
+            }
+
+            .menu.active {
+                left: 0;
+            }
+
+            .menu li {
+                margin-bottom: 20px;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .header-content h1 {
+                font-size: 2rem;
+            }
+
+            form {
+                grid-template-columns: 1fr;
+            }
+
+            .full-width {
+                grid-column: span 1;
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Hero Image -->
+    <header>
+        <div class="header-content">
+            <h1>Discover Amazing Destinations</h1>
+            <p>Explore and manage the most breathtaking places around the world</p>
+            <div class="search-bar">
+                <input type="text" placeholder="Search for destinations...">
+                <button>Search</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="logo">
+                <span>TravelAdmin</span>
+            </div>
+            <ul class="menu">
+                <li><a href="#" class="active">Home</a></li>
+                <li><a href="#featured">Destinations</a></li>
+                <li><a href="#admin">Admin Panel</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="menu-toggle">≡</div>
+        </div>
+    </nav>
+
+    <!-- Featured Destinations Section -->
+    <section class="featured-section" id="featured">
+        <div class="container">
+            <div class="section-title">
+                <h2>Featured Destinations</h2>
+                <p>Discover our handpicked selection of the most breathtaking places to visit</p>
+            </div>
+            <div class="destinations-grid" id="destinationsGrid">
+                <!-- Destinations will be loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Panel Section -->
+    <section class="admin-panel" id="admin">
+        <div class="container">
+            <div class="section-title">
+                <h2>Admin Panel</h2>
+                <p>Manage your tourist destinations with ease</p>
+            </div>
+            <div class="admin-controls">
+                <h3>Destination Management</h3>
+                <div class="control-buttons">
+                    <button class="btn" id="addBtn">Add New Destination</button>
+                    <button class="btn btn-outline" id="refreshBtn">Refresh Data</button>
+                </div>
+                <div id="destinationForm">
+                    <h4>Add/Edit Destination</h4>
+                    <form id="placeForm">
+                        <input type="hidden" id="placeId">
+                        <div class="form-group">
+                            <label for="placeName">Destination Name</label>
+                            <input type="text" id="placeName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="placeLocation">Location</label>
+                            <input type="text" id="placeLocation" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="placeRating">Rating (1-5)</label>
+                            <input type="number" id="placeRating" min="1" max="5" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="placePrice">Price Range</label>
+                            <input type="text" id="placePrice" placeholder="e.g. $100 - $500" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="placeDescription">Description</label>
+                            <textarea id="placeDescription" required></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="placeImage">Image URL</label>
+                            <input type="text" id="placeImage" placeholder="Enter image URL" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <button type="submit" class="btn" id="saveBtn">Save Destination</button>
+                            <button type="button" class="btn btn-outline" id="cancelBtn">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Location</th>
+                        <th>Rating</th>
+                        <th>Price Range</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="destinationsTable">
+                    <!-- Table data will be loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>About TravelAdmin</h3>
+                    <p>We provide a comprehensive tourism management system for tour operators, travel agencies, and tourism boards.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#featured">Destinations</a></li>
+                        <li><a href="#admin">Admin Panel</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Us</h3>
+                    <ul>
+                        <li>Email: info@traveladmin.com</li>
+                        <li>Phone: +1 (123) 456-7890</li>
+                        <li>Address: 123 Tourism Street, Travel City</li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Follow Us</h3>
+                    <ul>
+                        <li><a href="#">Facebook</a></li>
+                        <li><a href="#">Twitter</a></li>
+                        <li><a href="#">Instagram</a></li>
+                        <li><a href="#">LinkedIn</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 TravelAdmin. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Sample data
+        let destinations = [
+            {
+                id: 1,
+                name: 'Santorini',
+                location: 'Greece',
+                rating: 4.8,
+                price: '$1200 - $3000',
+                description: 'Famous for its stunning sunset views, white-washed buildings, and blue domes. A perfect romantic getaway with beautiful beaches and rich history.',
+                image: '/api/placeholder/600/400'
+            },
+            {
+                id: 2,
+                name: 'Kyoto',
+                location: 'Japan',
+                rating: 4.7,
+                price: '$800 - $2500',
+                description: 'Experience the traditional side of Japan with beautiful temples, serene gardens, and geisha culture. Home to over 1,600 Buddhist temples and 400 Shinto shrines.',
+                image: '/api/placeholder/600/400'
+            },
+            {
+                id: 3,
+                name: 'Machu Picchu',
+                location: 'Peru',
+                rating: 4.9,
+                price: '$1000 - $2000',
+                description: 'This UNESCO World Heritage site is one of the most famous archaeological sites in the world. The ancient Incan citadel sits high in the Andes Mountains.',
+                image: '/api/placeholder/600/400'
+            },
+            {
+                id: 4,
+                name: 'Bora Bora',
+                location: 'French Polynesia',
+                rating: 4.9,
+                price: '$3000 - $10000',
+                description: 'A tropical paradise known for its luxurious overwater bungalows, crystal clear waters, and colorful coral reefs. Perfect for a dream honeymoon.',
+                image: '/api/placeholder/600/400'
+            },
+            {
+                id: 5,
+                name: 'Barcelona',
+                location: 'Spain',
+                rating: 4.6,
+                price: '$600 - $1500',
+                description: 'A vibrant city known for its unique architecture by Antoni Gaudí, amazing food scene, beautiful beaches, and rich cultural heritage.',
+                image: '/api/placeholder/600/400'
+            },
+            {
+                id: 6,
+                name: 'Grand Canyon',
+                location: 'USA',
+                rating: 4.8,
+                price: '$500 - $1200',
+                description: 'One of the most spectacular natural wonders of the world. The massive canyon offers breathtaking views, hiking trails, and river rafting experiences.',
+                image: '/api/placeholder/600/400'
+            }
+        ];
+
+        // DOM Elements
+        const destinationsGrid = document.getElementById('destinationsGrid');
+        const destinationsTable = document.getElementById('destinationsTable');
+        const destinationForm = document.getElementById('destinationForm');
+        const placeForm = document.getElementById('placeForm');
+        const addBtn = document.getElementById('addBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const menuToggle = document.querySelector('.menu-toggle');
+        const menu = document.querySelector('.menu');
+
+        // Generate stars for rating
+        function generateStars(rating) {
+            let stars = '';
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            
+            for (let i = 0; i < fullStars; i++) {
+                stars += '★';
+            }
+            
+            if (hasHalfStar) {
+                stars += '½';
+            }
+            
+            return stars;
+        }
+
+        // Display destinations in the grid
+        function displayDestinations() {
+            destinationsGrid.innerHTML = '';
+            
+            destinations.forEach(destination => {
+                const card = document.createElement('div');
+                card.className = 'destination-card';
+                
+                card.innerHTML = `
+                    <div class="destination-img">
+                        <img src="${destination.image}" alt="${destination.name}">
+                    </div>
+                    <div class="destination-info">
+                        <h3>${destination.name}</h3>
+                        <div class="rating">${generateStars(destination.rating)} (${destination.rating})</div>
+                        <div class="destination-meta">
+                            <span>${destination.location}</span>
+                            <span>${destination.price}</span>
+                        </div>
+                        <p class="destination-desc">${destination.description}</p>
+                        <a href="#" class="btn">View Details</a>
+                    </div>
+                `;
+                
+                destinationsGrid.appendChild(card);
+            });
+        }
+
+        // Display destinations in the table
+        function displayDestinationsTable() {
+            destinationsTable.innerHTML = '';
+            
+            destinations.forEach(destination => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${destination.id}</td>
+                    <td>${destination.name}</td>
+                    <td>${destination.location}</td>
+                    <td>${destination.rating}</td>
+                    <td>${destination.price}</td>
+                    <td class="action-buttons">
+                        <button class="edit-btn" data-id="${destination.id}">Edit</button>
+                        <button class="delete-btn" data-id="${destination.id}">Delete</button>
+                    </td>
+                `;
+                
+                destinationsTable.appendChild(row);
+            });
+            
+            // Add event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', handleEdit);
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', handleDelete);
+            });
+        }
+
+        // Handle form submission
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('placeId').value;
+            const name = document.getElementById('placeName').value;
+            const location = document.getElementById('placeLocation').value;
+            const rating = parseFloat(document.getElementById('placeRating').value);
+            const price = document.getElementById('placePrice').value;
+            const description = document.getElementById('placeDescription').value;
+            const image = document.getElementById('placeImage').value;
+            
+            if (id) {
+                // Update existing destination
+                const index = destinations.findIndex(dest => dest.id === parseInt(id));
+                if (index !== -1) {
+                    destinations[index] = {
+                        ...destinations[index],
+                        name,
+                        location,
+                        rating,
+                        price,
+                        description,
+                        image
+                    };
+                }
+            } else {
+                // Add new destination
+                const newId = destinations.length > 0 ? Math.max(...destinations.map(dest => dest.id)) + 1 : 1;
+                destinations.push({
+                    id: newId,
+                    name,
+                    location,
+                    rating,
+                    price,
+                    description,
+                    image
+                });
+            }
+            
+            // Refresh the displays and reset the form
+            displayDestinations();
+            displayDestinationsTable();
+            placeForm.reset();
+            document.getElementById('placeId').value = '';
+            destinationForm.style.display = 'none';
+            
+            // Show success message
+            alert(`Destination has been ${id ? 'updated' : 'added'} successfully!`);
+        }
+
+        // Handle edit button click
+        function handleEdit(e) {
+            const id = parseInt(e.target.getAttribute('data-id'));
+            const destination = destinations.find(dest => dest.id === id);
+            
+            if (destination) {
+                document.getElementById('placeId').value = destination.id;
+                document.getElementById('placeName').value = destination.name;
+                document.getElementById('placeLocation').value = destination.location;
+                document.getElementById('placeRating').value = destination.rating;
+                document.getElementById('placePrice').value = destination.price;
+                document.getElementById('placeDescription').value = destination.description;
+                document.getElementById('placeImage').value = destination.image;
+                
+                destinationForm.style.display = 'block';
+                document.getElementById('placeName').focus();
+                
+                // Scroll to the form
+                destinationForm.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Handle delete button click
+        function handleDelete(e) {
+            const id = parseInt(e.target.getAttribute('data-id'));
+            
+            if (confirm('Are you sure you want to delete this destination?')) {
+                destinations = destinations.filter(dest => dest.id !== id);
+                displayDestinations();
+                displayDestinationsTable();
+                alert('Destination has been deleted successfully!');
+            }
+        }
+
+        // Event Listeners
+        window.addEventListener('DOMContentLoaded', () => {
+            displayDestinations();
+            displayDestinationsTable();
+        });
+
+        addBtn.addEventListener('click', () => {
+            placeForm.reset();
+            document.getElementById('placeId').value = '';
+            destinationForm.style.display = 'block';
+            document.getElementById('placeName').focus();
+        });
+
+        refreshBtn.addEventListener('click', () => {
+            displayDestinations();
+            displayDestinationsTable();
+            alert('Data refreshed successfully!');
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            destinationForm.style.display = 'none';
+        });
+
+        placeForm.addEventListener('submit', handleFormSubmit);
+
+        // Mobile Menu Toggle
+        menuToggle.addEventListener('click', () => {
+            menu.classList.toggle('active');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu') && !e.target.closest('.menu-toggle') && menu.classList.contains('active')) {
+                menu.classList.remove('active');
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId.startsWith('#') && targetId !== '#') {
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                        
+                        // Close mobile menu after clicking a link
+                        menu.classList.remove('active');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
